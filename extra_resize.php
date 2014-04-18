@@ -3,7 +3,7 @@
  * Extra Fields Resize Plugin
  *
  * @package extra_resize
- * @version 1.0.0
+ * @version 1.0.1
  * @author Jason Booth (Kilandor)
  * @copyright Copyright (c) 2014 Jason Booth (Kilandor)
  * @license BSD
@@ -39,16 +39,41 @@ if(($a == 'add' || $a == 'edit') && $_POST)
 	$fa_resize['extra_colorbg'] = cot_import('extra_colorbg', 'P', 'ALP');
 	$fa_resize['extra_crop'] = cot_import('extra_crop', 'P', 'ALP');
 	
-	if($a == 'add')
-		$db->insert($db_extra_resize, $fa_resize);
-	elseif($a == "edit")
-		$db->update($db_extra_resize, $fa_resize, 'extra_id = '.(int)$id.' LIMIT 1');
-	$id = (!empty($id)) ? $id : $db->lastInsertId();
+	if(empty($fa_resize['extra_location'])) cot_error($L['extra_resize_error_location']);
+	if(empty($fa_resize['extra_name'])) cot_error($L['extra_resize_error_name']);
+	if(empty($fa_resize['extra_thname'])) cot_error($L['extra_resize_error_thname']);
+	else
+	{
+		if($a == 'edit' && $db->query("SELECT * FROM ".$db_extra_resize." WHERE extra_thname = ? AND extra_id != ?", array($fa_resize['extra_thname'], $id))->rowCount() > 0)
+			cot_error($L['extra_resize_error_thname_duplicate']);
+		elseif($a != 'edit' && $db->query("SELECT * FROM ".$db_extra_resize." WHERE extra_thname = ?", $fa_resize['extra_thname'])->rowCount() > 0)
+			cot_error($L['extra_resize_error_thname_duplicate']);
+	}
+	if(empty($fa_resize['extra_x'])) cot_error($L['extra_resize_error_x']);
+	if(empty($fa_resize['extra_y'])) cot_error($L['extra_resize_error_y']);
+	if(empty($fa_resize['extra_jpg_quality']) || ($fa_resize['extra_jpg_quality'] < 1 || $fa_resize['extra_jpg_quality'] > 100)) cot_error($L['extra_resize_error_jpg_quality']);
+	if(!empty($fa_resize['extra_colorbg']) && !preg_match('/([a-fA-F0-9]+)/', $fa_resize['extra_colorbg']))
+		cot_error($L['extra_resize_error_color_bg']);
 	
-	@mkdir($cfg['extra_resize_dir'].'/'.$fa_resize['extra_thname'], $cfg['dir_perms']);
-	extraresize_load_cache(true);
-	
-	cot_redirect(cot_url('plug', 'e=extra_resize', '', true));
+	if(!cot_error_found())
+	{
+		if($a == 'add')
+		{
+			$db->insert($db_extra_resize, $fa_resize);
+			cot_message($L['extra_resize_sucess_add']);
+		}
+		elseif($a == "edit")
+		{
+			$db->update($db_extra_resize, $fa_resize, 'extra_id = '.(int)$id.' LIMIT 1');
+			cot_message($L['extra_resize_sucess_edit']);
+		}
+		$id = (!empty($id)) ? $id : $db->lastInsertId();
+		
+		@mkdir($cfg['extra_resize_dir'].'/'.$fa_resize['extra_thname'], $cfg['dir_perms']);
+		extraresize_load_cache(true);
+		
+		cot_redirect(cot_url('plug', 'e=extra_resize', '', true));
+	}
 }
 elseif($a == 'del' && !empty($id))
 {
@@ -56,13 +81,13 @@ elseif($a == 'del' && !empty($id))
 		$db->delete($db_extra_resize, 'extra_id = ?', $id);
 	
 	extraresize_load_cache(true);
-	
+	cot_message($L['extra_resize_sucess_delete']);
 	cot_redirect(cot_url('plug', 'e=extra_resize', '', true));
 }
 
 $t = new XTemplate(cot_tplfile('extra_resize', 'plug'));
 
-list($extra_locations, $extra_location_titles, $extra_names, $extra_names_titles) = extraresize_load_selectbox_info();
+list($extra_locations, $extra_locations_titles, $extra_names, $extra_names_titles) = extraresize_load_selectbox_info();
 if(!empty($extra_resize_info) && $a != 'edit')
 {
 	foreach($extra_resize_info as $extra_location=>$extra_name_info)
@@ -95,6 +120,7 @@ if(!empty($extra_resize_info) && $a != 'edit')
 	}
 	$t->parse('MAIN.INFO');
 }
+
 if($a == 'edit' && !empty($id))
 {
 	$sql_resize = $db->query("SELECT * FROM ".$db_extra_resize." WHERE extra_id = ?", $id);
@@ -129,3 +155,5 @@ elseif($a ==  'edit')
 		));
 	$t->parse('MAIN.EDIT');
 }
+
+cot_display_messages($t);
