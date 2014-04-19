@@ -3,12 +3,13 @@
  * Extra Fields Resize Plugin
  *
  * @package extra_resize
- * @version 1.0.0
+ * @version 1.0.1
  * @author Jason Booth (Kilandor)
  * @copyright Copyright (c) 2014 Jason Booth (Kilandor)
  * @license BSD
  */
 
+require_once cot_langfile('extra_resize', 'plug');
  // Table name globals
 global $db_extra_resize, $db_x;
 $db_extra_resize = (isset($db_extra_resize)) ? $db_extra_resize : $db_x . 'extra_resize';
@@ -25,16 +26,22 @@ function extraresize_load_selectbox_info()
 	global $cot_extrafields, $L;
 	foreach($cot_extrafields as $location => $extrafields)
 	{
-		$extra_locations[] = $location;
-		$extra_locations_titles[] = (empty($L['extra_resize_location_'.$location])) ? $location : $L['extra_resize_location_'.$location];
 		foreach($extrafields as $extrafield)
 		{
-			$extra_names[$location][] = $extrafield['field_name'];
-			$extra_names_titles[$location][] = (empty($L['extra_resize_name_'.$location.'_'.$extrafield['field_name']])) ? $extrafield['field_name'] : $L['extra_resize_name_'.$location.'_'.$extrafield['field_name']];
+			if($extrafield['field_type'] == 'file')
+			{
+				$extra_names[$location][] = $extrafield['field_name'];
+				$extra_names_titles[$location][] = (empty($L['extra_resize_name_'.$location.'_'.$extrafield['field_name']])) ? $extrafield['field_name'] : $L['extra_resize_name_'.$location.'_'.$extrafield['field_name']];
+			}
+		}
+		if(!empty($extra_names[$location]))
+		{
+			$extra_locations[] = $location;
+			$extra_locations_titles[] = (empty($L['extra_resize_location_'.$location])) ? $location : $L['extra_resize_location_'.$location];
 		}
 	}
 	
-	return array($extra_locations, $extra_location_titles, $extra_names, $extra_names_titles);
+	return array($extra_locations, $extra_locations_titles, $extra_names, $extra_names_titles);
 }
 
 /*

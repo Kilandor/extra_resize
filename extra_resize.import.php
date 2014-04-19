@@ -3,7 +3,7 @@
  * Extra Fields Resize Plugin
  *
  * @package extra_resize
- * @version 1.0.0
+ * @version 1.0.1
  * @author Jason Booth (Kilandor)
  * @copyright Copyright (c) 2014 Jason Booth (Kilandor)
  * @license BSD
