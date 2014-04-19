@@ -12,8 +12,8 @@
 [BEGIN_COT_EXT]
 Code=extra_resize
 Name=Extra Fields Resize
-Category=commerce
-Description=This allows customization for file imports to allow for resizing of images.
+Category=files-media
+Description=Allow automatic thumbnail creation on file upload with the extra_fields system
 Version=1.0.1
 Date=2014-3-21
 Author=Jason Booth (Kilandor)
